@@ -1,3 +1,4 @@
+/// <reference lib="deno.ns" />
 // Follow this setup guide to integrate the Deno language server with your editor:
 // https://deno.land/manual/getting_started/setup_your_environment
 // This enables autocomplete, go to definition, etc.
@@ -20,9 +21,35 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log("キー取れてる？", Deno.env.get("OPENAI_API_KEY"))
     // リクエストボディの解析
     const { query, category, targetId } = await req.json();
-    
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${Deno.env.get("OPENAI_API_KEY")}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant that searches the web for specific information and returns it in a structured format."
+          },
+          {
+            role: "user",
+            content: `Search for upcoming events related to ${query}. Return information in JSON format with fields: title, description, date (ISO format), source_url, image_url (if available).`
+          }
+        ],
+        tools: [{ type: "browsing" }],
+        tool_choice: { type: "browsing" }
+      })
+    });
+  
+    const data = await response.json();
+
     // テスト用の簡単なレスポンス
     const testResponse = {
       success: true,
@@ -32,7 +59,8 @@ Deno.serve(async (req) => {
           query,
           category,
           targetId
-        }
+        },
+        response: data
       }
     };
 
