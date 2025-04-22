@@ -21,30 +21,20 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log("キー取れてる？", Deno.env.get("OPENAI_API_KEY"))
+    console.log("キー取れてる？", Deno.env.get("GEMINI_API_KEY"))
+    const key = Deno.env.get("GEMINI_API_KEY")
     // リクエストボディの解析
     const { query, category, targetId } = await req.json();
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${Deno.env.get("OPENAI_API_KEY")}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gpt-4-turbo",
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful assistant that searches the web for specific information and returns it in a structured format."
-          },
-          {
-            role: "user",
-            content: `Search for upcoming events related to ${query}. Return information in JSON format with fields: title, description, date (ISO format), source_url, image_url (if available).`
-          }
-        ],
-        tools: [{ type: "browsing" }],
-        tool_choice: { type: "browsing" }
+        "contents": [{
+          "parts":[{"text": "Explain how AI works"}]
+        }]
       })
     });
   
